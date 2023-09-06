@@ -1,0 +1,38 @@
+[
+  {
+    "name": "exchange-rate",
+    "owner": "AlmostRenoir",
+    "branches": [
+      {
+        "name": "master",
+        "lastCommitSHA": "78373d9d16222ad7a09911bafa2eeda58b68fb6e"
+      }
+    ]
+  },
+  {
+    "name": "repos-browser",
+    "owner": "AlmostRenoir",
+    "branches": [
+      {
+        "name": "http-client",
+        "lastCommitSHA": "715e286ed1d24a4160c30522883bd51bd44ca5af"
+      },
+      {
+        "name": "http-client-changes",
+        "lastCommitSHA": "448f77563687a195eed3b0fb02097bdd2b14dc8b"
+      },
+      {
+        "name": "master",
+        "lastCommitSHA": "78588f5aa62573689f25acdf85155ca2ce7640b5"
+      },
+      {
+        "name": "readme",
+        "lastCommitSHA": "11742db0bed40a3e39c5cc6043617da361d827ab"
+      },
+      {
+        "name": "users-repos",
+        "lastCommitSHA": "8517376768cee711ddbb6906561fa8728751df21"
+      }
+    ]
+  }
+]
