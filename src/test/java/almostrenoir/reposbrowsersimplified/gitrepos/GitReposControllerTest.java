@@ -23,6 +23,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GitReposControllerTest {
 
+    private static final String GET_USERS_REPOS_WITHOUT_FORKS_URI = "/git-repos/by-user/%s/no-forks";
+
     @Value("${github.port}")
     private int githubPort;
 
@@ -45,8 +47,8 @@ class GitReposControllerTest {
 
     @Test
     void shouldOmitForksWhenGetUsersReposWithoutForks() throws IOException, URISyntaxException {
-        String url = String.format(GitReposService.USERS_REPOS_ROUTE, "AlmostRenoir");
-        stubFor(get(urlEqualTo(url))
+        String username = "AlmostRenoir";
+        stubFor(get(urlEqualTo(getUsersReposGithubUri(username)))
                 .withHeader(GitReposService.API_VERSION_HEADER_NAME, equalTo(GitReposService.API_VERSION_HEADER_VALUE))
                 .withHeader("Accept", equalTo(GitReposService.GITHUB_JSON_CONTENT_TYPE))
                 .willReturn(aResponse()
@@ -72,7 +74,7 @@ class GitReposControllerTest {
 
         String expected = getFileFromResources("gitrepos/AlmostRenoirReposWithoutForks.json");
         webTestClient.get()
-                .uri("/git-repos/by-user/AlmostRenoir/no-forks")
+                .uri(getGetUsersReposWithoutForksUri(username))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().json(expected);
@@ -83,6 +85,32 @@ class GitReposControllerTest {
         if (resourceUrl == null) throw new FileNotFoundException(String.format("%s not found in resources", filePath));
         Path path = Paths.get(resourceUrl.toURI());
         return Files.readString(path, StandardCharsets.UTF_8);
+    }
+
+    @Test
+    void shouldReturnEmptyArrayIfUserDoesNotHaveAnyReposWhenGetUsersReposWithoutForks() {
+        String username = "Foobar";
+        stubFor(get(urlEqualTo(getUsersReposGithubUri(username)))
+                .withHeader(GitReposService.API_VERSION_HEADER_NAME, equalTo(GitReposService.API_VERSION_HEADER_VALUE))
+                .withHeader("Accept", equalTo(GitReposService.GITHUB_JSON_CONTENT_TYPE))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[]")));
+
+        webTestClient.get()
+                .uri(getGetUsersReposWithoutForksUri(username))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().json("[]");
+    }
+
+    private String getUsersReposGithubUri(String username) {
+        return String.format(GitReposService.USERS_REPOS_ROUTE, username);
+    }
+
+    private String getGetUsersReposWithoutForksUri(String username) {
+        return String.format(GET_USERS_REPOS_WITHOUT_FORKS_URI, username);
     }
 
 }
