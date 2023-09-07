@@ -72,19 +72,12 @@ class GitReposControllerTest {
                         .withHeader("Content-Type", "application/json")
                         .withBodyFile("github/ReposBrowserBranches.json")));
 
-        String expected = getFileFromResources("gitrepos/AlmostRenoirReposWithoutForks.json");
+        String expected = readFileFromResources("gitrepos/AlmostRenoirReposWithoutForks.json");
         webTestClient.get()
-                .uri(getGetUsersReposWithoutForksUri(username))
+                .uri(getUsersReposWithoutForksUri(username))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().json(expected);
-    }
-
-    private String getFileFromResources(String filePath) throws IOException, URISyntaxException {
-        URL resourceUrl = getClass().getClassLoader().getResource(filePath);
-        if (resourceUrl == null) throw new FileNotFoundException(String.format("%s not found in resources", filePath));
-        Path path = Paths.get(resourceUrl.toURI());
-        return Files.readString(path, StandardCharsets.UTF_8);
     }
 
     @Test
@@ -99,18 +92,41 @@ class GitReposControllerTest {
                         .withBody("[]")));
 
         webTestClient.get()
-                .uri(getGetUsersReposWithoutForksUri(username))
+                .uri(getUsersReposWithoutForksUri(username))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody().json("[]");
+    }
+
+    @Test
+    void shouldReturn404IfUserNotFoundWhenGetUsersReposWithoutForks() throws IOException, URISyntaxException {
+        String username = "Fooobar";
+        stubFor(get(urlEqualTo(getUsersReposGithubUri(username)))
+                .withHeader(GitReposService.API_VERSION_HEADER_NAME, equalTo(GitReposService.API_VERSION_HEADER_VALUE))
+                .withHeader("Accept", equalTo(GitReposService.GITHUB_JSON_CONTENT_TYPE))
+                .willReturn(aResponse().withStatus(404)));
+
+        String expected = readFileFromResources("gitrepos/NoUserWithGivenUsername.json");
+        webTestClient.get()
+                .uri(getUsersReposWithoutForksUri(username))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody().json(expected);
     }
 
     private String getUsersReposGithubUri(String username) {
         return String.format(GitReposService.USERS_REPOS_ROUTE, username);
     }
 
-    private String getGetUsersReposWithoutForksUri(String username) {
+    private String getUsersReposWithoutForksUri(String username) {
         return String.format(GET_USERS_REPOS_WITHOUT_FORKS_URI, username);
+    }
+
+    private String readFileFromResources(String filePath) throws IOException, URISyntaxException {
+        URL resourceUrl = getClass().getClassLoader().getResource(filePath);
+        if (resourceUrl == null) throw new FileNotFoundException(String.format("%s not found in resources", filePath));
+        Path path = Paths.get(resourceUrl.toURI());
+        return Files.readString(path, StandardCharsets.UTF_8);
     }
 
 }

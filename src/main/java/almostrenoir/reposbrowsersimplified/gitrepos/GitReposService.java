@@ -3,8 +3,10 @@ package almostrenoir.reposbrowsersimplified.gitrepos;
 import almostrenoir.reposbrowsersimplified.gitrepos.models.GitRepoDTO;
 import almostrenoir.reposbrowsersimplified.gitrepos.models.GithubBranch;
 import almostrenoir.reposbrowsersimplified.gitrepos.models.GithubRepo;
+import almostrenoir.reposbrowsersimplified.shared.exceptions.DataNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -35,7 +37,9 @@ public class GitReposService {
         return webClient.get()
                 .uri(getUsersReposUrl(username))
                 .retrieve()
-                .bodyToFlux(GithubRepo.class)
+                .onStatus(HttpStatus.NOT_FOUND::equals,
+                        response -> Mono.error(new DataNotFoundException("There is no user with given username"))
+                ).bodyToFlux(GithubRepo.class)
                 .filter(githubRepo -> !githubRepo.fork())
                 .flatMap(this::collectBranches);
     }
